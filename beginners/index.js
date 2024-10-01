@@ -43,10 +43,12 @@ request(url, async (error, response, html) => {
         const results = await Promise.all(urls.map(url => promiseRequest(url)))
 
         results.forEach((html, index) => {
-            const $ = cheerio.load(html);
+            if (html) {
+                const $ = cheerio.load(html);
 
-            const attendees = $('.rtec-attendee').toArray().map(a => $(a).text())
-            beginnerSailings[index].attendees.push(...attendees)
+                const attendees = $('.rtec-attendee').toArray().map(a => $(a).text())
+                beginnerSailings[index].attendees.push(...attendees)
+            }
         })
 
         const sailingsBeforeToday = beginnerSailings.filter(sailing => sailing.date.isBefore(moment()))
