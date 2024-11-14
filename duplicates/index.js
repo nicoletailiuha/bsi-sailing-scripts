@@ -20,13 +20,18 @@ request(url, async (error, response, html) => {
             const sailingName = $(sailing).find('.tribe-events-calendar-list__event-title-link').text()
 
             const isPrivate = sailingName.toLowerCase().includes('private')
+            const isCancelled = $(sailing).find('.tribe-events-status-label__text--canceled').text().toLowerCase().includes('cancelled')
+                || sailingName.toLowerCase().includes('cancelled')
+
+            const isTraining = sailingName.toLowerCase().includes('training')
 
             const nameComponents = sailingName.replace(/\s/g,'').split('–')
 
             const data = {
                 date: moment($(sailing).find('time').prop('datetime')),
-                isCancelled: $(sailing).find('.tribe-events-status-label__text--canceled').text().toLowerCase().includes('cancelled'),
+                isCancelled,
                 isPrivate,
+                isTraining,
                 skipper: nameComponents[0],
                 boat: nameComponents[1],
                 type: nameComponents[2]?.toLowerCase().includes('beginner') ? 'beginner' : 'member',
@@ -37,7 +42,12 @@ request(url, async (error, response, html) => {
             return data
         })
 
-        const sailingsAfterToday = sailings.filter(sailing => sailing.date.isAfter(moment()))
+        const sailingsAfterToday = sailings.filter(sailing => 
+            sailing.date.isAfter(moment()) 
+            && !sailing.isPrivate 
+            && !sailing.isCancelled
+            && !sailing.isTraining
+        )
         const urls = sailingsAfterToday.map(s => s.link)
 
         const results = await Promise.all(urls.map(url => promiseRequest(url)))
